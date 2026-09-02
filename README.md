@@ -57,12 +57,10 @@ Você pode abrir o marcador em outro monitor ou imprimi-lo.
 
 ## 5. Se o modelo não aparecer
 
-O exemplo mostra também um pequeno cubo verde.
-
-- Cubo verde aparece, GLB não aparece:
-  tracking está funcionando; problema provável é modelo, escala ou caminho.
-- Nem o cubo aparece:
-  problema provável é câmera/HTTPS/detecção do marcador.
+- O marcador é detectado, mas o GLB não aparece:
+  o tracking está funcionando; o problema provável é modelo, escala ou caminho.
+- O marcador não é detectado:
+  o problema provável é câmera/HTTPS ou detecção do marcador.
 - Mensagem "ERRO ao carregar models/model.glb":
   revise o nome e o arquivo.
 - GLB carregado mas parece invisível:

@@ -73,16 +73,7 @@
       smoothTolerance="0.01"
       smoothThreshold="5"
     >
-      <!-- Objeto de referência: se ele aparecer, o marker tracking está funcionando -->
-      <a-box
-        position="-0.55 0.12 0"
-        scale="0.20 0.20 0.20"
-        material="color: #00ff88; opacity: 0.8; transparent: true;"
-      ></a-box>
-
-      <!-- Seu modelo GLB.
-           Coloque o arquivo em models/model.glb.
-           Ajuste SCALE e POSITION se necessário. -->
+      <!-- Modelo GLB carregado a partir da pasta models. -->
       <a-entity
         id="glb-model"
         gltf-model="url(models/model.glb)"
