@@ -2,14 +2,18 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
   />
 
-  <title>AR.js - Marker Based + OBJ</title>
+  <title>AR.js - Marker Based + GLB</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <!-- AR.js Marker Based -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 </head>
 
@@ -18,22 +22,28 @@
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
+    renderer="antialias: true; colorManagement: true;"
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
 
+    <!-- Marcador padrão Hiro -->
     <a-marker preset="hiro">
 
+      <!-- Modelo GLB -->
       <a-entity
-        obj-model="obj: url(models/model.obj)"
+        id="mapa3d"
+        gltf-model="url(models/model.glb)"
         position="0 0 0"
-        rotation="-90 0 0"
+        rotation="0 0 0"
         scale="0.01 0.01 0.01"
       ></a-entity>
 
+      <!-- Cubo de referência:
+           remova depois que confirmar que o GLB está aparecendo -->
       <a-box
         position="0 0.25 0"
         scale="0.15 0.15 0.15"
-        material="color: red; opacity: 0.8;"
+        material="color: red; opacity: 0.5; transparent: true;"
       ></a-box>
 
     </a-marker>
