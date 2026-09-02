@@ -29,14 +29,10 @@
     <!-- Marcador padrão Hiro -->
     <a-marker preset="hiro">
 
-      <!-- Modelo GLB -->
-      <a-entity
-        id="mapa3d"
-        gltf-model="url(models/model.glb)"
-        position="0 0 0"
-        rotation="0 0 0"
-        scale="0.01 0.01 0.01"
-      ></a-entity>
+      <!-- 2. Preload your .glb asset for optimal performance -->
+      <a-assets>
+        <a-asset-item id="my-model" src="models/model.glb"></a-asset-item>
+      </a-assets>
 
       <!-- Cubo de referência:
            remova depois que confirmar que o GLB está aparecendo -->
