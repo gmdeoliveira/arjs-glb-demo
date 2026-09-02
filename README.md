@@ -64,16 +64,11 @@ Você pode abrir o marcador em outro monitor ou imprimi-lo.
 - Mensagem "ERRO ao carregar models/model.glb":
   revise o nome e o arquivo.
 - GLB carregado mas parece invisível:
-  altere `scale="0.05 0.05 0.05"` no index.html.
+  o código centraliza e ajusta automaticamente o modelo ao marcador. Verifique o console do navegador caso o evento de carregamento não seja exibido.
 
 Experimente, por exemplo:
 
-    scale="0.001 0.001 0.001"
-    scale="0.01 0.01 0.01"
-    scale="0.1 0.1 0.1"
-    scale="1 1 1"
-
-Modelos de fotogrametria podem ter escalas muito diferentes.
+  O código normaliza automaticamente modelos de fotogrametria que tenham escala ou posição interna muito diferentes.
 
 ## 6. Diagnóstico no navegador
 
