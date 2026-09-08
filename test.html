@@ -57,7 +57,7 @@ const marker=document.querySelector("#marker");
 const scaleValue=document.querySelector("#scale-value");
 const rotationValue=document.querySelector("#rotation-value");
 
-let currentObjectUrl=null,currentScale=0.01,rotationX=0;
+let currentObjectUrl=null,currentScale=1,rotationX=0;
 
 function applyTransform(){
   model.setAttribute("scale",`${currentScale} ${currentScale} ${currentScale}`);
