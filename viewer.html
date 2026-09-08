@@ -25,7 +25,7 @@
 <section class="viewer-panel">
   <div class="row">
     <label class="file-label">Abrir GLB local<input id="viewer-file-input" type="file" accept=".glb,model/gltf-binary"></label>
-    <button id="load-stable">Abrir stable.glb</button>
+    <button id="load-stable">Abrir torre_ceb.glb</button>
     <button id="fit-model">Enquadrar</button>
   </div>
   <div class="row">
@@ -111,7 +111,7 @@ document.querySelector("#viewer-file-input").addEventListener("change",e=>{
   if(!file.name.toLowerCase().endsWith(".glb")){status.textContent="Selecione um arquivo .glb.";return;}
   if(currentObjectUrl)URL.revokeObjectURL(currentObjectUrl);currentObjectUrl=URL.createObjectURL(file);loadModel(currentObjectUrl,file.name,file.size);
 });
-document.querySelector("#load-stable").onclick=()=>loadModel("./models/stable.glb","stable.glb");
+document.querySelector("#load-stable").onclick=()=>loadModel("./models/torre_ceb.glb","torre_ceb.glb");
 document.querySelector("#fit-model").onclick=()=>fitCamera();
 document.querySelector("#view-iso").onclick=()=>fitCamera(new THREE.Vector3(1,.8,1));
 document.querySelector("#view-top").onclick=()=>fitCamera(new THREE.Vector3(0,1,.001));
@@ -129,7 +129,7 @@ window.addEventListener("drop",e=>{
 });
 
 function animate(){requestAnimationFrame(animate);resizeRenderer();controls.update();renderer.render(scene,camera);}animate();
-loadModel("./models/stable.glb","stable.glb");
+loadModel("./models/torre_ceb.glb","torre_ceb.glb");
 </script>
 </body>
 </html>
