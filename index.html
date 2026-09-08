@@ -20,7 +20,7 @@
 
 <div class="status-panel">
   <div><strong>Câmera:</strong> <span id="secure-status">verificando…</span></div>
-  <div><strong>Modelo:</strong> <span id="model-status"><span class="loading"></span>carregando models/DamagedHelmet.glb…</span></div>
+  <div><strong>Modelo:</strong> <span id="model-status"><span class="loading"></span>carregando models/torre_ceb.glb…</span></div>
   <div><strong>Marcador:</strong> <span id="marker-status">aguardando Hiro…</span></div>
 </div>
 
@@ -29,7 +29,7 @@
  arjs="sourceType:webcam; trackingMethod:best; debugUIEnabled:false;">
   <a-marker id="marker" preset="hiro" emitevents="true"
     smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-    <a-entity id="stable-model" gltf-model="url(./models/DamagedHelmet.glb)"
+    <a-entity id="stable-model" gltf-model="url(./models/torre_ceb.glb)"
       position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
   </a-marker>
   <a-entity camera></a-entity>
@@ -45,8 +45,8 @@ const marker=document.querySelector("#marker");
 if(window.isSecureContext){secureStatus.textContent="HTTPS OK";secureStatus.className="ok";}
 else{secureStatus.textContent="sem HTTPS — câmera pode ser bloqueada";secureStatus.className="err";}
 
-model.addEventListener("model-loaded",()=>{modelStatus.textContent="DamagedHelmet.glb carregado";modelStatus.className="ok";});
-model.addEventListener("model-error",(e)=>{console.error(e.detail);modelStatus.textContent="erro ao carregar DamagedHelmet.glb";modelStatus.className="err";});
+model.addEventListener("model-loaded",()=>{modelStatus.textContent="torre_ceb.glb carregado";modelStatus.className="ok";});
+model.addEventListener("model-error",(e)=>{console.error(e.detail);modelStatus.textContent="erro ao carregar torre_ceb.glb";modelStatus.className="err";});
 marker.addEventListener("markerFound",()=>{markerStatus.textContent="Hiro detectado";markerStatus.className="ok";});
 marker.addEventListener("markerLost",()=>{markerStatus.textContent="Hiro fora da câmera";markerStatus.className="warn";});
 </script>
