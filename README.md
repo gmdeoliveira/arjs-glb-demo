@@ -1,81 +1,44 @@
-# AR.js + GLB + marcador Hiro
+# ODM Web Viewer Suite
 
-Estrutura esperada:
+Três páginas para separar os testes de visualização de mapas GLB gerados a partir do ODM.
 
-arjs_glb_marker_demo/
+## 1. `index.html` — AR estável
+Carrega sempre `models/stable.glb`. Use aqui apenas um GLB que você já validou.
+
+## 2. `test.html` — AR de teste
+Permite selecionar um `.glb` do armazenamento do celular/computador sem fazer upload para o GitHub.
+Mostra nome, tamanho, estado de carregamento e permite alterar escala/rotação.
+
+## 3. `viewer.html` — visualizador 3D
+Visualizador não-AR com Three.js:
+- zoom, rotação e pan;
+- upload local e drag-and-drop;
+- vistas isométrica/topo/frente/lateral;
+- grid, eixos e wireframe;
+- enquadramento automático;
+- estatísticas de meshes, triângulos, vértices e dimensões;
+- suporte a Draco e Meshopt no GLTFLoader.
+
+## Estrutura
+
+```text
+odm_web_viewer_suite/
 ├── index.html
+├── test.html
+├── viewer.html
+├── styles.css
+├── .nojekyll
 └── models/
-    └── model.glb
+    └── stable.glb
+```
 
-## 1. Coloque seu arquivo GLB
+Copie o modelo já validado para `models/stable.glb`.
 
-Copie o seu arquivo para:
+## GitHub Pages
+Publique a raiz do projeto em `Settings → Pages → Deploy from a branch → main → /(root)`.
 
-    models/model.glb
-
-O nome precisa ser exatamente `model.glb` neste primeiro teste.
-
-## 2. Teste no computador
-
-Dentro da pasta do projeto:
-
-    python3 -m http.server 8000
-
-Abra no próprio computador:
-
-    http://localhost:8000
-
-Em localhost a câmera pode funcionar porque localhost é tratado como origem confiável.
-
-## 3. Para abrir no celular, use HTTPS
-
-Abrir diretamente algo como:
-
-    http://192.168.0.10:8000
-
-normalmente NÃO libera a câmera no navegador do celular.
-
-Uma opção simples para teste é Cloudflare Quick Tunnel.
-
-Com o servidor Python ainda rodando:
-
-    cloudflared tunnel --url http://localhost:8000
-
-Ele imprimirá uma URL parecida com:
-
-    https://alguma-coisa.trycloudflare.com
-
-Abra essa URL no celular.
-
-## 4. Marcador
-
-Use o marcador Hiro oficial do AR.js:
-
+As páginas AR usam o marcador Hiro:
 https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png
 
-Você pode abrir o marcador em outro monitor ou imprimi-lo.
-
-## 5. Se o modelo não aparecer
-
-- O marcador é detectado, mas o GLB não aparece:
-  o tracking está funcionando; o problema provável é modelo, escala ou caminho.
-- O marcador não é detectado:
-  o problema provável é câmera/HTTPS ou detecção do marcador.
-- Mensagem "ERRO ao carregar models/model.glb":
-  revise o nome e o arquivo.
-- GLB carregado mas parece invisível:
-  o código centraliza e ajusta automaticamente o modelo ao marcador. Verifique o console do navegador caso o evento de carregamento não seja exibido.
-
-Experimente, por exemplo:
-
-  O código normaliza automaticamente modelos de fotogrametria que tenham escala ou posição interna muito diferentes.
-
-## 6. Diagnóstico no navegador
-
-O topo da tela mostra:
-
-- se a página está em HTTPS;
-- se o GLB carregou;
-- se o marcador foi detectado.
-
-Também vale abrir o console remoto do Chrome/Android se necessário.
+## Observação
+O `viewer.html` é um visualizador de mesh GLB. Para nuvens de pontos muito grandes em LAS/LAZ/COPC, uma futura página baseada em Potree seria mais próxima do CloudCompare.

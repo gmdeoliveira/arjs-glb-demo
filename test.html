@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ODM Viewer — AR teste</title>
+<link rel="stylesheet" href="./styles.css">
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="title">ODM Viewer · AR de teste</div>
+  <nav class="nav">
+    <a href="./index.html">AR estável</a>
+    <a class="active" href="./test.html">AR teste</a>
+    <a href="./viewer.html">Visualizador 3D</a>
+  </nav>
+</header>
+
+<section class="test-controls">
+  <label class="file-label">Escolher GLB<input id="file-input" type="file" accept=".glb,model/gltf-binary"></label>
+  <button id="scale-down">Escala ÷ 2</button>
+  <button id="scale-up">Escala × 2</button>
+  <button id="rotate-x">Rotacionar X +90°</button>
+  <button id="reset-transform">Reset</button>
+  <span class="value-pill">Escala: <span id="scale-value">0.01</span></span>
+  <span class="value-pill">Rotação X: <span id="rotation-value">0°</span></span>
+</section>
+
+<div class="status-panel">
+  <div><strong>Arquivo:</strong> <span id="file-status">nenhum GLB selecionado</span></div>
+  <div><strong>Modelo:</strong> <span id="model-status">aguardando arquivo</span></div>
+  <div><strong>Marcador:</strong> <span id="marker-status">aguardando Hiro…</span></div>
+  <div class="small">O arquivo é aberto localmente; ele não é enviado ao GitHub.</div>
+</div>
+
+<a-scene embedded vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false"
+ renderer="antialias:true; alpha:true; colorManagement:true;"
+ arjs="sourceType:webcam; trackingMethod:best; debugUIEnabled:false;">
+  <a-marker id="marker" preset="hiro" emitevents="true"
+    smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+    <a-entity id="dynamic-model" position="0 0 0" rotation="0 0 0" scale="0.01 0.01 0.01"></a-entity>
+    <a-box position="-0.65 0.12 0" scale="0.15 0.15 0.15"
+      material="color:#ff5252; opacity:0.45; transparent:true;"></a-box>
+  </a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
+
+<script>
+const fileInput=document.querySelector("#file-input");
+const fileStatus=document.querySelector("#file-status");
+const modelStatus=document.querySelector("#model-status");
+const markerStatus=document.querySelector("#marker-status");
+const model=document.querySelector("#dynamic-model");
+const marker=document.querySelector("#marker");
+const scaleValue=document.querySelector("#scale-value");
+const rotationValue=document.querySelector("#rotation-value");
+
+let currentObjectUrl=null,currentScale=0.01,rotationX=0;
+
+function applyTransform(){
+  model.setAttribute("scale",`${currentScale} ${currentScale} ${currentScale}`);
+  model.setAttribute("rotation",`${rotationX} 0 0`);
+  scaleValue.textContent=currentScale.toPrecision(3);
+  rotationValue.textContent=`${rotationX}°`;
+}
+
+fileInput.addEventListener("change",()=>{
+  const file=fileInput.files?.[0]; if(!file)return;
+  if(!file.name.toLowerCase().endsWith(".glb")){
+    fileStatus.textContent="selecione um arquivo .glb";fileStatus.className="err";return;
+  }
+  if(currentObjectUrl)URL.revokeObjectURL(currentObjectUrl);
+  currentObjectUrl=URL.createObjectURL(file);
+  fileStatus.textContent=`${file.name} · ${(file.size/1024/1024).toFixed(2)} MB`;
+  fileStatus.className="ok";
+  modelStatus.innerHTML='<span class="loading"></span>lendo e processando GLB…';
+  modelStatus.className="";
+  model.removeAttribute("gltf-model");
+  requestAnimationFrame(()=>model.setAttribute("gltf-model",currentObjectUrl));
+});
+
+model.addEventListener("model-loaded",()=>{modelStatus.textContent="GLB carregado e pronto para o marcador";modelStatus.className="ok";});
+model.addEventListener("model-error",(e)=>{console.error(e.detail);modelStatus.textContent="erro ao processar o GLB — veja o console";modelStatus.className="err";});
+marker.addEventListener("markerFound",()=>{markerStatus.textContent="Hiro detectado";markerStatus.className="ok";});
+marker.addEventListener("markerLost",()=>{markerStatus.textContent="Hiro fora da câmera";markerStatus.className="warn";});
+document.querySelector("#scale-down").onclick=()=>{currentScale/=2;applyTransform();};
+document.querySelector("#scale-up").onclick=()=>{currentScale*=2;applyTransform();};
+document.querySelector("#rotate-x").onclick=()=>{rotationX=(rotationX+90)%360;applyTransform();};
+document.querySelector("#reset-transform").onclick=()=>{currentScale=0.01;rotationX=0;applyTransform();};
+applyTransform();
+</script>
+</body>
+</html>

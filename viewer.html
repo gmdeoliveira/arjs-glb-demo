@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ODM Viewer — Visualizador 3D</title>
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="title">ODM Viewer · Visualizador 3D</div>
+  <nav class="nav">
+    <a href="./index.html">AR estável</a>
+    <a href="./test.html">AR teste</a>
+    <a class="active" href="./viewer.html">Visualizador 3D</a>
+  </nav>
+</header>
+
+<section class="viewer-panel">
+  <div class="row">
+    <label class="file-label">Abrir GLB local<input id="viewer-file-input" type="file" accept=".glb,model/gltf-binary"></label>
+    <button id="load-stable">Abrir stable.glb</button>
+    <button id="fit-model">Enquadrar</button>
+  </div>
+  <div class="row">
+    <button id="view-iso">Isométrica</button><button id="view-top">Topo</button>
+    <button id="view-front">Frente</button><button id="view-side">Lateral</button>
+  </div>
+  <div class="row">
+    <button id="toggle-grid">Grid: ON</button><button id="toggle-axes">Eixos: ON</button>
+    <button id="toggle-wire">Wireframe: OFF</button>
+  </div>
+  <div class="small" id="viewer-status">Inicializando…</div>
+  <div class="small" id="model-stats"></div>
+</section>
+
+<div class="viewer-shell"><canvas id="viewer"></canvas></div>
+<div class="drop-hint">Mouse: esquerdo rotaciona · direito move · roda dá zoom<br>Celular: 1 dedo rotaciona · 2 dedos fazem zoom/pan · também aceita arrastar um .glb</div>
+
+<script type="module">
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {DRACOLoader} from "three/addons/loaders/DRACOLoader.js";
+import {MeshoptDecoder} from "three/addons/libs/meshopt_decoder.module.js";
+
+const canvas=document.querySelector("#viewer"),status=document.querySelector("#viewer-status"),stats=document.querySelector("#model-stats");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x151c24);
+const camera=new THREE.PerspectiveCamera(50,1,.001,100000);camera.position.set(3,3,3);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=true;
+scene.add(new THREE.HemisphereLight(0xffffff,0x445566,2));
+const dl=new THREE.DirectionalLight(0xffffff,2.2);dl.position.set(5,8,4);scene.add(dl);
+const grid=new THREE.GridHelper(20,20);scene.add(grid);
+const axes=new THREE.AxesHelper(2);scene.add(axes);
+
+let modelRoot=null,wireframe=false,currentObjectUrl=null;
+const dracoLoader=new DRACOLoader();
+dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/libs/draco/");
+const loader=new GLTFLoader();loader.setDRACOLoader(dracoLoader);loader.setMeshoptDecoder(MeshoptDecoder);
+
+function resizeRenderer(){
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  if(canvas.width!==Math.floor(w*renderer.getPixelRatio())||canvas.height!==Math.floor(h*renderer.getPixelRatio())){
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+}
+function disposeMaterial(m){for(const v of Object.values(m)){if(v&&v.isTexture)v.dispose();}m.dispose?.();}
+function removeCurrentModel(){
+  if(!modelRoot)return;scene.remove(modelRoot);
+  modelRoot.traverse(n=>{if(!n.isMesh)return;n.geometry?.dispose();if(Array.isArray(n.material))n.material.forEach(disposeMaterial);else if(n.material)disposeMaterial(n.material);});
+  modelRoot=null;
+}
+function calcStats(root){
+  let triangles=0,vertices=0,meshes=0;
+  root.traverse(n=>{if(!n.isMesh||!n.geometry)return;meshes++;const g=n.geometry,p=g.attributes.position;if(p)vertices+=p.count;triangles+=g.index?g.index.count/3:(p?p.count/3:0);});
+  const box=new THREE.Box3().setFromObject(root),size=new THREE.Vector3();box.getSize(size);
+  return{meshes,triangles:Math.round(triangles),vertices,size};
+}
+function centerModel(root){const box=new THREE.Box3().setFromObject(root),center=new THREE.Vector3();box.getCenter(center);root.position.sub(center);}
+function fitCamera(direction=new THREE.Vector3(1,.8,1)){
+  if(!modelRoot)return;const box=new THREE.Box3().setFromObject(modelRoot),sphere=new THREE.Sphere();box.getBoundingSphere(sphere);
+  const r=Math.max(sphere.radius,.001),fov=THREE.MathUtils.degToRad(camera.fov),distance=(r/Math.sin(fov/2))*1.25,dir=direction.clone().normalize();
+  controls.target.copy(sphere.center);camera.position.copy(sphere.center).add(dir.multiplyScalar(distance));
+  camera.near=Math.max(distance/10000,.001);camera.far=Math.max(distance*100,1000);camera.updateProjectionMatrix();controls.update();
+}
+function applyWireframe(){if(!modelRoot)return;modelRoot.traverse(n=>{if(!n.isMesh||!n.material)return;(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{if("wireframe"in m){m.wireframe=wireframe;m.needsUpdate=true;}});});}
+function loadModel(url,label,localSize=null){
+  removeCurrentModel();status.innerHTML='<span class="loading"></span>Carregando '+label+'…';stats.textContent="";
+  loader.load(url,gltf=>{
+    modelRoot=gltf.scene;scene.add(modelRoot);centerModel(modelRoot);applyWireframe();
+    const info=calcStats(modelRoot);fitCamera();
+    const sizeText=localSize!==null?` · arquivo ${(localSize/1024/1024).toFixed(2)} MB`:"";
+    status.textContent=`${label} carregado${sizeText}`;
+    stats.textContent=`${info.meshes.toLocaleString("pt-BR")} meshes · ${info.triangles.toLocaleString("pt-BR")} triângulos · ${info.vertices.toLocaleString("pt-BR")} vértices · dimensões ${info.size.x.toFixed(2)} × ${info.size.y.toFixed(2)} × ${info.size.z.toFixed(2)}`;
+  },xhr=>{
+    status.innerHTML=xhr.total?`<span class="loading"></span>Carregando ${label}: ${Math.round(xhr.loaded/xhr.total*100)}%`:`<span class="loading"></span>Carregando ${label}: ${(xhr.loaded/1024/1024).toFixed(1)} MB recebidos`;
+  },err=>{console.error(err);status.textContent=`Erro ao carregar ${label}. Veja o console do navegador.`;});
+}
+
+document.querySelector("#viewer-file-input").addEventListener("change",e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  if(!file.name.toLowerCase().endsWith(".glb")){status.textContent="Selecione um arquivo .glb.";return;}
+  if(currentObjectUrl)URL.revokeObjectURL(currentObjectUrl);currentObjectUrl=URL.createObjectURL(file);loadModel(currentObjectUrl,file.name,file.size);
+});
+document.querySelector("#load-stable").onclick=()=>loadModel("./models/stable.glb","stable.glb");
+document.querySelector("#fit-model").onclick=()=>fitCamera();
+document.querySelector("#view-iso").onclick=()=>fitCamera(new THREE.Vector3(1,.8,1));
+document.querySelector("#view-top").onclick=()=>fitCamera(new THREE.Vector3(0,1,.001));
+document.querySelector("#view-front").onclick=()=>fitCamera(new THREE.Vector3(0,0,1));
+document.querySelector("#view-side").onclick=()=>fitCamera(new THREE.Vector3(1,0,0));
+document.querySelector("#toggle-grid").onclick=e=>{grid.visible=!grid.visible;e.target.textContent=`Grid: ${grid.visible?"ON":"OFF"}`;};
+document.querySelector("#toggle-axes").onclick=e=>{axes.visible=!axes.visible;e.target.textContent=`Eixos: ${axes.visible?"ON":"OFF"}`;};
+document.querySelector("#toggle-wire").onclick=e=>{wireframe=!wireframe;applyWireframe();e.target.textContent=`Wireframe: ${wireframe?"ON":"OFF"}`;};
+
+window.addEventListener("dragover",e=>e.preventDefault());
+window.addEventListener("drop",e=>{
+  e.preventDefault();const file=e.dataTransfer.files?.[0];
+  if(!file||!file.name.toLowerCase().endsWith(".glb")){status.textContent="Arraste um arquivo .glb.";return;}
+  if(currentObjectUrl)URL.revokeObjectURL(currentObjectUrl);currentObjectUrl=URL.createObjectURL(file);loadModel(currentObjectUrl,file.name,file.size);
+});
+
+function animate(){requestAnimationFrame(animate);resizeRenderer();controls.update();renderer.render(scene,camera);}animate();
+loadModel("./models/stable.glb","stable.glb");
+</script>
+</body>
+</html>
